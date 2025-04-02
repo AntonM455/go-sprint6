@@ -18,8 +18,12 @@ type Server struct {
 func NewServer(logger *log.Logger) *Server {
 	router := http.NewServeMux()
 
+	// Метод GET для главной страницы
 	router.HandleFunc("/", handlers.MainHandler)
-	router.HandleFunc("/upload", handlers.HttpParcerHandler)
+
+	// Метод POST для /upload
+	router.HandleFunc("POST /upload", handlers.HttpParcerHandler)
+	//router.HandleFunc("/POST", handlers.HttpParcerHandler)
 
 	// Структура сервера из задания
 	server := &http.Server{
@@ -38,6 +42,6 @@ func NewServer(logger *log.Logger) *Server {
 }
 
 func (s *Server) Start() error {
-	s.logger.Println("Сервер запущен на порту 8080")
+	s.logger.Println("The server is running on port 8080")
 	return s.server.ListenAndServe()
 }

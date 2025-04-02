@@ -15,7 +15,9 @@ func main() {
 	// Запускается сервер
 	if err := srv.Start(); err != nil {
 		// Если возникла ошибка, выводим её в лог и завершаем программу
-		logger.Fatal("Ошибка при запуске сервера: ", err)
+		logger.Fatal("Error starting server:", err)
 	}
 
 }
+
+// http://localhost:8080/ - для проверки

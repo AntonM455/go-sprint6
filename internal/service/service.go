@@ -2,30 +2,29 @@ package service
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/Yandex-Practicum/go1fl-sprint6-final/pkg/morse"
 )
 
-// Функция Convert конвертирует переданный текст в Морзе; и наоборот — если был передан код Морзе, функция должна переконвертировать его в обычный текст и вернуть.
+// Функция Convert конвертирует переданный текст в Морзе; и наоборот —
+// если был передан код Морзе, функция должна переконвертировать его в
+// обычный текст и вернуть.
 func Convert(StringTxtOrMorse string) (string, error) {
 	if StringTxtOrMorse == "" {
-		return "", errors.New("входящая строка пустая") // возвращаем ошибку в случае, если на вход пришла пустая строка
+		// возвращаем ошибку в случае, если на вход пришла пустая строка
+		return "", errors.New("input string is empty")
 	}
 
-	// Проверяем, состоит ли строка только из символов Морзе, они могут быть только пробелом, - или .
-	isMorse := true
-	for _, ch := range StringTxtOrMorse {
-		if ch != '-' && ch != '.' && ch != ' ' {
-			isMorse = false
-			break
-		}
-	}
-
-	// Выполняем конвертацию, если true, то вызовет ToText, если false - ToMorse
-
-	if isMorse {
-		return morse.ToText(StringTxtOrMorse), nil
-	} else {
+	// Проверяем, состоит ли строка только из символов Морзе,
+	// они могут быть только пробелом,"-" или "."
+	if strings.ContainsFunc(StringTxtOrMorse, func(r rune) bool {
+		return !strings.ContainsAny(string(r), ".- ") // если символ не '.', не '-', не пробел
+	}) {
+		// Если это обычный текст, конвертируем в Морзе
 		return morse.ToMorse(StringTxtOrMorse), nil
 	}
+
+	// Если строка состоит только из символов Морзе, то выполняем конвертацию в текст
+	return morse.ToText(StringTxtOrMorse), nil
 }

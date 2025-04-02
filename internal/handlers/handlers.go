@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bufio"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -12,14 +13,12 @@ import (
 
 // Функция MainHandler возвращает HTML из файла index.html
 func MainHandler(w http.ResponseWriter, r *http.Request) {
-	data, err := os.ReadFile("C:\\Users\\User\\Dev\\go-sprint6\\index.html")
-	if err != nil {
-		http.Error(w, "ошибка при загрузке из файла", http.StatusInternalServerError)
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
 		return
 	}
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write(data)
+	w.Header().Add("Content-Type", "text/html")
+	http.ServeFile(w, r, "./index.html")
 }
 
 // Функция HttpParcerHandler делает загрузку файла, конвертирует его с помощью вызова Convert и сохраняет результат
@@ -27,7 +26,7 @@ func HttpParcerHandler(w http.ResponseWriter, r *http.Request) {
 
 	file, fileHeader, err := r.FormFile("myFile")
 	if err != nil {
-		http.Error(w, "ошибка при получении файла", http.StatusInternalServerError)
+		http.Error(w, "error when receiving file", http.StatusInternalServerError)
 		return
 	}
 	// Закрыть файл после использования.
@@ -43,37 +42,38 @@ func HttpParcerHandler(w http.ResponseWriter, r *http.Request) {
 		fileData += scanner.Text() + "\n"
 	}
 	if err := scanner.Err(); err != nil {
-		http.Error(w, "ошибка при чтении файла", http.StatusInternalServerError)
+		http.Error(w, "error reading file", http.StatusInternalServerError)
 		return
 	}
 
 	// Вызывается функция Convert из пакета service для конвертации
 	convertedData, err := service.Convert(fileData)
 	if err != nil {
-		http.Error(w, "ошибка при конвертации", http.StatusInternalServerError)
+		http.Error(w, "error during conversion", http.StatusInternalServerError)
 		return
 	}
 	// Создание нового файла, определение имени и пути нового файла
 	fileName := "indexres_" + time.Now().UTC().Format("20060102150405") + ext
-	filePath := filepath.Join("C:\\Users\\User\\Dev\\go-sprint6", fileName)
+	filePath := filepath.Join(".", fileName)
 
 	// Создаеться новый файл и внего записываются данные
 	outputFile, err := os.Create(filePath)
 	if err != nil {
-		http.Error(w, "ошибка при создании файла", http.StatusInternalServerError)
+		http.Error(w, "error creating file", http.StatusInternalServerError)
 		return
 	}
 	defer outputFile.Close()
 
 	// Запись данных во вновь созданный файл.
-	_, err = outputFile.WriteString(convertedData)
-	if err != nil {
-		http.Error(w, "ошибка при записи файла", http.StatusInternalServerError)
+	if _, err = outputFile.Write([]byte(convertedData)); err != nil {
+		http.Error(w, "error while writing file", http.StatusInternalServerError)
 		return
 	}
 
-	// Возвращение результата пользователю
+	// Возвращение результата пользователю в HTTP-ответе.
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Файл успешно обработан. Результат сохранён в " + filePath))
+
+	if _, err := w.Write([]byte(convertedData)); err != nil {
+		log.Printf("Error sending response: %v", err)
+	}
 }
